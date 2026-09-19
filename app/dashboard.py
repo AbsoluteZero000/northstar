@@ -70,7 +70,9 @@ def settings():
             lang=request.form.get("language"); tz=request.form.get("timezone","Africa/Cairo").strip(); name=request.form.get("display_name","").strip()
             if lang in ("ar","en") and tz:
                 capacity=max(0,min(int(request.form.get("outside_work_minutes",120)),1440))
-                db.execute("UPDATE users SET display_name=?,language=?,timezone=?,week_starts=?,workdays=?,work_start=?,work_end=?,outside_work_minutes=?,date_format=?,friday_family_day=?,friday_weekly_review=?,updated_at=?,version=version+1 WHERE id=?",(name,lang,tz,int(request.form.get("week_starts",0)),request.form.get("workdays","0,1,2,3,4"),request.form.get("work_start","09:00"),request.form.get("work_end","17:00"),capacity,request.form.get("date_format","locale"),int(bool(request.form.get("friday_family_day"))),int(bool(request.form.get("friday_weekly_review"))),now(),g.user["id"])); db.commit(); return redirect(url_for("dashboard.settings"))
+                workdays=sorted({int(day) for day in request.form.getlist("workdays") if day.isdigit() and 0<=int(day)<=6})
+                if not workdays: workdays=[0,1,2,3,4]
+                db.execute("UPDATE users SET display_name=?,language=?,timezone=?,week_starts=?,workdays=?,work_start=?,work_end=?,outside_work_minutes=?,date_format=?,friday_family_day=?,friday_weekly_review=?,updated_at=?,version=version+1 WHERE id=?",(name,lang,tz,int(request.form.get("week_starts",0)),",".join(map(str,workdays)),request.form.get("work_start","09:00"),request.form.get("work_end","17:00"),capacity,request.form.get("date_format","locale"),int(bool(request.form.get("friday_family_day"))),int(bool(request.form.get("friday_weekly_review"))),now(),g.user["id"])); db.commit(); return redirect(url_for("dashboard.settings"))
         elif action=="token":
             scopes=request.form.getlist("scopes"); allowed={"tasks:read","tasks:write","goals:read","goals:write","habits:read","habits:write","recaps:read","recaps:write","stats:read","resources:read","resources:write"}
             if set(scopes)<=allowed:

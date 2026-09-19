@@ -167,3 +167,12 @@ def test_personal_profile_preferences_and_plan_seed(app,user):
         challenge=db.execute("SELECT * FROM habits WHERE user_id=? AND key='pmo_free'",(uid,)).fetchone()
         assert challenge["privacy"]=="private" and challenge["end_date"]=="2026-11-16"
         assert db.execute("SELECT COUNT(*) FROM resources WHERE user_id=?",(uid,)).fetchone()[0]==3
+
+
+def test_workday_picker_uses_named_days_and_persists_selection(app,user):
+    page=user.get("/settings").get_data(as_text=True)
+    assert "Monday=0 through Sunday=6" not in page
+    assert 'name="workdays" value="0" checked' in page and ">Monday<" in page
+    response=user.post("/settings",data={"csrf_token":"test-csrf","action":"profile","display_name":"Ahmed","language":"en","timezone":"Africa/Cairo","week_starts":"0","workdays":["1","5"],"work_start":"09:00","work_end":"17:00","outside_work_minutes":"120","date_format":"locale"})
+    assert response.status_code==302
+    with app.app_context(): assert get_db().execute("SELECT workdays FROM users").fetchone()[0]=="1,5"
