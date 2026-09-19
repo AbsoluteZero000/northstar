@@ -28,6 +28,11 @@ def create_app(config=None):
         g.locale = "en"
         if session.get("user_id"):
             from .db import get_db
+            if session.get("session_uuid"):
+                active=get_db().execute("SELECT * FROM user_sessions WHERE uuid=? AND user_id=? AND revoked_at IS NULL",(session["session_uuid"],session["user_id"])).fetchone()
+                if not active:
+                    session.clear(); g.user=None; return
+                get_db().execute("UPDATE user_sessions SET last_seen_at=CURRENT_TIMESTAMP WHERE id=?",(active["id"],)); get_db().commit()
             user = get_db().execute("SELECT * FROM users WHERE id=?", (session["user_id"],)).fetchone()
             g.user = user
             if user:
@@ -42,4 +47,3 @@ def create_app(config=None):
         return {"locale": g.get("locale", "en"), "direction": "rtl" if g.get("locale") == "ar" else "ltr", "tr": TRANSLATIONS}
 
     return app
-

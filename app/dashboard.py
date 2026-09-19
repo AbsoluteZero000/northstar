@@ -99,6 +99,9 @@ def settings():
             if table:
                 row=owned(table,uid,g.user["id"],True)
                 if row: db.execute(f"UPDATE {table} SET deleted_at=NULL,updated_at=?,version=version+1 WHERE id=?",(now(),row["id"])); audit(g.user["id"],"restore",request.form.get("kind"),uid); db.commit()
+        elif action=="revoke_session":
+            sid=request.form.get("session_uuid")
+            db.execute("UPDATE user_sessions SET revoked_at=? WHERE uuid=? AND user_id=?",(now(),sid,g.user["id"])); audit(g.user["id"],"revoke","session",sid); db.commit()
     tokens=db.execute("SELECT * FROM api_tokens WHERE user_id=? ORDER BY created_at DESC",(g.user["id"],)).fetchall()
     categories=db.execute("SELECT * FROM categories WHERE user_id=? AND deleted_at IS NULL ORDER BY position",(g.user["id"],)).fetchall()
     audits=db.execute("SELECT * FROM audit_events WHERE user_id=? ORDER BY created_at DESC LIMIT 30",(g.user["id"],)).fetchall()
@@ -106,7 +109,8 @@ def settings():
     habits=db.execute("SELECT h.*,s.weekdays,s.time_of_day FROM habits h LEFT JOIN habit_schedules s ON s.habit_id=h.id WHERE h.user_id=? AND h.deleted_at IS NULL ORDER BY h.id",(g.user["id"],)).fetchall()
     template=db.execute("SELECT * FROM recap_templates WHERE user_id=? AND active=1 AND deleted_at IS NULL",(g.user["id"],)).fetchone()
     template_fields=db.execute("SELECT * FROM recap_template_fields WHERE template_id=? AND deleted_at IS NULL ORDER BY position",(template["id"],)).fetchall() if template else []
-    return render_template("settings.html",tokens=tokens,categories=categories,habits=habits,template=template,template_fields=template_fields,audits=audits,trash=trash,revealed=revealed,csrf_token=csrf_token())
+    sessions=db.execute("SELECT * FROM user_sessions WHERE user_id=? ORDER BY last_seen_at DESC",(g.user["id"],)).fetchall()
+    return render_template("settings.html",tokens=tokens,categories=categories,habits=habits,template=template,template_fields=template_fields,sessions=sessions,audits=audits,trash=trash,revealed=revealed,csrf_token=csrf_token())
 
 @bp.get("/settings/export.json")
 @login_required
