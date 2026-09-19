@@ -1,4 +1,4 @@
-const CACHE='hayat-shell-v1',SHELL=['/offline','/static/css/app.css','/static/js/app.js','/static/manifest.webmanifest','/static/icons/icon-192.png','/static/icons/icon-512.png'];
+const CACHE='northstar-shell-v2',SHELL=['/offline','/static/css/app.css','/static/js/app.js','/static/manifest.webmanifest','/static/icons/icon-192.png','/static/icons/icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 function offlinePage(path){return new Promise(resolve=>{const req=indexedDB.open('hayat-offline-v1',1);req.onsuccess=()=>{const get=req.result.transaction('data').objectStore('data').get('page:'+path);get.onsuccess=()=>resolve(get.result?new Response(get.result.html,{headers:{'Content-Type':'text/html; charset=utf-8'}}):null);get.onerror=()=>resolve(null)};req.onerror=()=>resolve(null)})}

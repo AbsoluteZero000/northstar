@@ -2,7 +2,7 @@ from flask import g
 
 TRANSLATIONS = {
     "en": {
-        "app_name": "Hayat", "today": "Today", "week": "Week", "goals": "Goals",
+        "app_name": "Northstar", "today": "Today", "week": "Week", "goals": "Goals",
         "statistics": "Statistics", "settings": "Settings", "logout": "Log out",
         "login": "Log in", "register": "Create account", "email": "Email", "password": "Password",
         "language": "Language", "timezone": "Timezone", "save": "Save", "add_task": "Add task",
@@ -15,7 +15,7 @@ TRANSLATIONS = {
         "invalid_login": "Invalid email or password.", "csrf_error": "Your session expired. Please try again.",
     },
     "ar": {
-        "app_name": "حياة", "today": "اليوم", "week": "الأسبوع", "goals": "الأهداف",
+        "app_name": "نورث ستار", "today": "اليوم", "week": "الأسبوع", "goals": "الأهداف",
         "statistics": "الإحصاءات", "settings": "الإعدادات", "logout": "تسجيل الخروج",
         "login": "تسجيل الدخول", "register": "إنشاء حساب", "email": "البريد الإلكتروني", "password": "كلمة المرور",
         "language": "اللغة", "timezone": "المنطقة الزمنية", "save": "حفظ", "add_task": "إضافة مهمة",
@@ -33,4 +33,3 @@ TRANSLATIONS = {
 def t(key, locale=None):
     lang = locale or getattr(g, "locale", "en")
     return TRANSLATIONS.get(lang, TRANSLATIONS["en"]).get(key, key)
-

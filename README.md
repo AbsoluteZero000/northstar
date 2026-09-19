@@ -1,6 +1,6 @@
-# Hayat · حياة
+# Northstar · نورث ستار
 
-Hayat is a mobile-first, bilingual (English/Arabic), offline-first personal life dashboard built with Flask and SQLite. It combines lifetime-to-week goal planning, unlimited task nesting, scheduled habits, a calm Islamic nightly muḥāsabah, factual weekly reflection, statistics, and a scoped API intended for personal agents.
+Northstar is a mobile-first, bilingual (English/Arabic), offline-first personal life dashboard built with Flask and SQLite. It combines lifetime-to-week goal planning, unlimited task nesting, scheduled habits, a calm Islamic nightly muḥāsabah, factual weekly reflection, statistics, and a scoped API intended for personal agents.
 
 ## What works
 
@@ -20,7 +20,7 @@ Hayat is a mobile-first, bilingual (English/Arabic), offline-first personal life
 The project is a Flask modular monolith. Blueprints own browser authentication, dashboard pages and `/api/v1`; `services.py` contains domain rules/statistics; `db.py` owns SQLite connections and migrations. There is deliberately no ORM. SQL is parameterized, transactions protect hierarchy batches, foreign keys are enabled on every connection, and WAL mode improves small-instance concurrency.
 
 ```text
-hayat-dashboard/
+northstar/
 ├── app/
 │   ├── __init__.py          application factory
 │   ├── auth.py              browser authentication
@@ -45,7 +45,7 @@ hayat-dashboard/
 Python 3.11+ is recommended.
 
 ```bash
-cd hayat-dashboard
+cd northstar
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -92,18 +92,18 @@ Limitations: background sync depends on reopening the PWA because the MVP does n
 Create a token in Settings, give it a name, choose only the needed scopes and optionally set an expiry. Recap scopes are marked as access to private reflections. Copy the secret immediately; only its SHA-256 hash and a short non-secret prefix are retained.
 
 ```bash
-export HAYAT_TOKEN='hayat_copy_the_one_time_secret_here'
+export NORTHSTAR_TOKEN='northstar_copy_the_one_time_secret_here'
 
-curl -H "Authorization: Bearer $HAYAT_TOKEN" \
+curl -H "Authorization: Bearer $NORTHSTAR_TOKEN" \
   http://127.0.0.1:5000/api/v1/today
 
 curl -X POST http://127.0.0.1:5000/api/v1/tasks \
-  -H "Authorization: Bearer $HAYAT_TOKEN" \
+  -H "Authorization: Bearer $NORTHSTAR_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"title":"Review threat model","due_date":"2026-09-20"}'
 
 curl -X POST http://127.0.0.1:5000/api/v1/goals/tree \
-  -H "Authorization: Bearer $HAYAT_TOKEN" \
+  -H "Authorization: Bearer $NORTHSTAR_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"goals":[{"type":"lifetime","title":"Lifelong learning","children":[{"type":"year","title":"2026","children":[{"type":"quarter","title":"SecOps course Q4","children":[{"type":"month","title":"Foundation modules","children":[{"type":"week","title":"Complete module one"}]}]}]}]}]}'
 ```
@@ -133,7 +133,7 @@ Resource URLs can then be attached with `POST /api/v1/resources`. API responses 
 
 Use HTTPS, a long random `SECRET_KEY`, `SESSION_COOKIE_SECURE=true`, and a production WSGI server such as Gunicorn behind a reverse proxy. Forward the original scheme and configure trusted proxy handling at the deployment boundary. Do not expose Flask debug mode. Restrict the instance directory to the service account.
 
-The included Fly configuration runs one Gunicorn worker (appropriate for a single SQLite writer), mounts the `hayat_data` volume at `/data`, forces HTTPS and keeps one machine running. A first deployment is:
+The included Fly configuration runs one Gunicorn worker (appropriate for a single SQLite writer), mounts the existing compatibility-named `hayat_data` volume at `/data`, forces HTTPS and keeps one machine running. The infrastructure identifier is retained so renaming the product does not risk the live database:
 
 ```bash
 flyctl apps create hayat-dashboard-20260919

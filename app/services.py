@@ -35,10 +35,10 @@ def audit(user_id, action, entity_type, entity_uuid=None, metadata=None, actor=N
 
 
 DEFAULT_CATEGORIES = [
-    ("marriage", "Marriage", "#c084fc", "heart"), ("spiritual", "Spiritual", "#d4a84f", "crescent"),
-    ("finance", "Finance", "#4ade80", "wallet"), ("secops", "SecOps", "#60a5fa", "shield"),
-    ("health", "Health", "#fb7185", "activity"), ("family_social", "Family/Social", "#f97316", "users"),
-    ("work", "Work", "#94a3b8", "briefcase"), ("personal", "Personal", "#2dd4bf", "user"),
+    ("spiritual", "Spiritual", "#10b981", "crescent"), ("marriage", "Marriage", "#f43f5e", "heart"),
+    ("secops", "SecOps", "#3b82f6", "shield"), ("finance", "Finance", "#d4a84f", "wallet"),
+    ("health", "Health", "#ef4444", "activity"), ("family_social", "Family/Social", "#8b5cf6", "users"),
+    ("work", "Work", "#64748b", "briefcase"), ("personal", "Personal", "#06b6d4", "user"),
 ]
 
 DEFAULT_FIELDS = [
@@ -52,7 +52,7 @@ DEFAULT_FIELDS = [
 
 def provision_user(user_id):
     db = get_db(); stamp = now()
-    for pos, (key, name, color, icon) in enumerate(DEFAULT_CATEGORIES):
+    for pos, (key, name, color, icon) in enumerate(DEFAULT_CATEGORIES,1):
         db.execute("INSERT INTO categories(uuid,user_id,name_key,name,color,icon,position,updated_at) VALUES(?,?,?,?,?,?,?,?)", (new_uuid(),user_id,key,name,color,icon,pos,stamp))
     template_uuid = new_uuid()
     cur = db.execute("INSERT INTO recap_templates(uuid,user_id,name_en,name_ar,intro_en,intro_ar,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",

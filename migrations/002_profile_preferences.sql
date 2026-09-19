@@ -1,0 +1,24 @@
+ALTER TABLE users ADD COLUMN week_starts INTEGER NOT NULL DEFAULT 0 CHECK(week_starts BETWEEN 0 AND 6);
+ALTER TABLE users ADD COLUMN workdays TEXT NOT NULL DEFAULT '0,1,2,3,4';
+ALTER TABLE users ADD COLUMN work_start TEXT NOT NULL DEFAULT '09:00';
+ALTER TABLE users ADD COLUMN work_end TEXT NOT NULL DEFAULT '17:00';
+ALTER TABLE users ADD COLUMN outside_work_minutes INTEGER NOT NULL DEFAULT 120 CHECK(outside_work_minutes BETWEEN 0 AND 1440);
+ALTER TABLE users ADD COLUMN date_format TEXT NOT NULL DEFAULT 'locale';
+ALTER TABLE users ADD COLUMN friday_family_day INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE users ADD COLUMN friday_weekly_review INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE goals ADD COLUMN priority INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE habits ADD COLUMN privacy TEXT NOT NULL DEFAULT 'normal' CHECK(privacy IN ('normal','private'));
+ALTER TABLE habits ADD COLUMN start_date TEXT;
+ALTER TABLE habits ADD COLUMN end_date TEXT;
+ALTER TABLE habits ADD COLUMN measurement TEXT;
+ALTER TABLE habits ADD COLUMN failure_handling TEXT;
+ALTER TABLE habits ADD COLUMN archived_at TEXT;
+
+UPDATE categories SET color='#10b981', position=1 WHERE name_key='spiritual';
+UPDATE categories SET color='#f43f5e', position=2 WHERE name_key='marriage';
+UPDATE categories SET color='#3b82f6', position=3 WHERE name_key='secops';
+UPDATE categories SET color='#d4a84f', position=4 WHERE name_key='finance';
+UPDATE categories SET color='#ef4444', position=5 WHERE name_key='health';
+UPDATE categories SET color='#8b5cf6', position=6 WHERE name_key='family_social';
+UPDATE categories SET color='#64748b', position=7 WHERE name_key='work';
+UPDATE categories SET color='#06b6d4', position=8 WHERE name_key='personal';

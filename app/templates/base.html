@@ -2,8 +2,9 @@
 <html lang="{{ locale }}" dir="{{ direction }}">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#092c28"><meta name="csrf-token" content="{{ csrf_token|default('') }}">
+  <meta name="theme-color" content="#111116"><meta name="csrf-token" content="{{ csrf_token|default('') }}">
   <title>{% block title %}{{ t('app_name') }}{% endblock %}</title>
+  <script>document.documentElement.dataset.theme=localStorage.getItem('hayat-theme')||'system'</script>
   <link rel="manifest" href="{{ url_for('static',filename='manifest.webmanifest') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/app.css') }}">
   <script defer src="{{ url_for('static',filename='js/app.js') }}"></script>
 </head>
@@ -11,7 +12,7 @@
 {% if g.user %}
 <aside class="sidebar"><a class="brand" href="{{ url_for('dashboard.today') }}"><span>☾</span>{{ t('app_name') }}</a><nav>
  {% for endpoint,key,icon in [('dashboard.today','today','✓'),('dashboard.week','week','▦'),('dashboard.goals','goals','⌁'),('dashboard.statistics','statistics','◔'),('dashboard.settings','settings','⚙')] %}<a href="{{ url_for(endpoint) }}" {% if request.endpoint==endpoint %}aria-current="page"{% endif %}><span aria-hidden="true">{{ icon }}</span>{{ t(key) }}</a>{% endfor %}
-</nav><div class="connection"><span id="connection-dot"></span><span id="connection-label">{{ t('online') }}</span><button class="link" id="sync-button" type="button">{{ t('sync') }}</button></div></aside>
+</nav><div class="connection"><span id="connection-dot"></span><span id="connection-label">{{ t('online') }}</span><button class="link" id="theme-button" type="button" aria-label="Change color theme">◐ Theme</button><button class="link" id="sync-button" type="button">{{ t('sync') }}</button></div></aside>
 {% endif %}
 <main class="page {% if not g.user %}auth-page{% endif %}">
  {% for category,message in get_flashed_messages(with_categories=true) %}<div class="flash {{ category }}" role="alert">{{ t(message) if message in tr[locale] else message }}</div>{% endfor %}

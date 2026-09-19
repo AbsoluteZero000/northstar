@@ -74,7 +74,7 @@ def test_habit_entries_streaks_and_stats(app,user):
 
 
 def make_token(app,user_id,scopes,expires=None,revoked=None):
-    secret="hayat_"+uuid.uuid4().hex; db=get_db()
+    secret="northstar_"+uuid.uuid4().hex; db=get_db()
     db.execute("INSERT INTO api_tokens(uuid,user_id,name,token_prefix,token_hash,scopes,created_at,expires_at,revoked_at) VALUES(?,?,?,?,?,?,?,?,?)",(new_uuid(),user_id,"test",secret[:12],hashlib.sha256(secret.encode()).hexdigest(),scopes,now(),expires,revoked)); db.commit(); return secret
 
 
@@ -150,3 +150,20 @@ def test_openapi_manifest_and_service_worker(client):
     assert spec["openapi"].startswith("3.") and "/api/v1/sync" in spec["paths"]
     assert client.get("/static/manifest.webmanifest").status_code==200
     assert client.get("/static/sw.js").status_code==200
+
+
+def test_personal_profile_preferences_and_plan_seed(app,user):
+    from app.personal_plan import seed_personal_plan
+    with app.app_context():
+        db=get_db(); uid=db.execute("SELECT id FROM users").fetchone()[0]
+        db.execute("UPDATE users SET display_name='Ahmed Wael Wanas',timezone='Africa/Cairo',language='en',week_starts=0,workdays='0,1,2,3,4',work_start='09:00',work_end='17:00',outside_work_minutes=120 WHERE id=?",(uid,)); db.commit()
+        assert "successfully" in seed_personal_plan(uid)
+        assert "already exists" in seed_personal_plan(uid)
+        profile=db.execute("SELECT * FROM users WHERE id=?",(uid,)).fetchone()
+        assert profile["display_name"]=="Ahmed Wael Wanas" and profile["outside_work_minutes"]==120
+        categories=db.execute("SELECT name_key,position FROM categories WHERE user_id=? ORDER BY position",(uid,)).fetchall()
+        assert [(x["name_key"],x["position"]) for x in categories]==[("spiritual",1),("marriage",2),("secops",3),("finance",4),("health",5),("family_social",6),("work",7),("personal",8)]
+        assert db.execute("SELECT COUNT(*) FROM goals WHERE user_id=?",(uid,)).fetchone()[0]==95
+        challenge=db.execute("SELECT * FROM habits WHERE user_id=? AND key='pmo_free'",(uid,)).fetchone()
+        assert challenge["privacy"]=="private" and challenge["end_date"]=="2026-11-16"
+        assert db.execute("SELECT COUNT(*) FROM resources WHERE user_id=?",(uid,)).fetchone()[0]==3
