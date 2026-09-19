@@ -1,0 +1,44 @@
+{
+  "openapi":"3.0.3",
+  "info":{"title":"Hayat Agent API","version":"1.0.0","description":"Bilingual, user-isolated life planning API. Machine keys remain stable regardless of locale."},
+  "servers":[{"url":"/"}],
+  "security":[{"bearerAuth":[]}],
+  "components":{
+    "securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer","bearerFormat":"hayat personal token"}},
+    "schemas":{
+      "Error":{"type":"object","properties":{"error":{"type":"object","properties":{"code":{"type":"string"},"message":{"type":"string"},"details":{"type":"object"}}}}},
+      "GoalInput":{"type":"object","required":["type","title"],"properties":{"uuid":{"type":"string","format":"uuid"},"parent_id":{"oneOf":[{"type":"integer"},{"type":"string"}]},"type":{"enum":["lifetime","year","quarter","month","week"]},"title":{"type":"string"},"description":{"type":"string"},"start_date":{"type":"string","format":"date"},"end_date":{"type":"string","format":"date"}}},
+      "TaskInput":{"type":"object","required":["title"],"properties":{"uuid":{"type":"string","format":"uuid"},"title":{"type":"string"},"description":{"type":"string"},"goal_id":{"type":"integer"},"parent_task_id":{"type":"integer"},"due_date":{"type":"string","format":"date"},"scheduled_time":{"type":"string"}}},
+      "RecapInput":{"type":"object","required":["recap_date","answers"],"properties":{"uuid":{"type":"string","format":"uuid"},"recap_date":{"type":"string","format":"date"},"template_id":{"oneOf":[{"type":"integer"},{"type":"string"}]},"status":{"enum":["draft","completed"]},"answers":{"type":"object","additionalProperties":true}}},
+      "SyncMutation":{"type":"object","required":["mutation_uuid","entity_type","entity_uuid","operation","base_version","payload"],"properties":{"mutation_uuid":{"type":"string","format":"uuid"},"entity_type":{"enum":["task","goal","habit","recap","resource","habit_entry"]},"entity_uuid":{"type":"string","format":"uuid"},"operation":{"enum":["create","update","delete"]},"base_version":{"type":"integer"},"client_timestamp":{"type":"string","format":"date-time"},"payload":{"type":"object"},"force":{"type":"boolean"}}}
+    }
+  },
+  "paths":{
+    "/api/v1/today":{"get":{"summary":"Today's tasks and habits","security":[{"bearerAuth":[]}],"responses":{"200":{"description":"Today data"},"401":{"description":"Unauthorized"},"403":{"description":"Requires tasks:read"}}}},
+    "/api/v1/week":{"get":{"summary":"Week view","parameters":[{"name":"start","in":"query","schema":{"type":"string","format":"date"}}],"responses":{"200":{"description":"Week data"}}}},
+    "/api/v1/goals":{"get":{"summary":"List goals","responses":{"200":{"description":"Paginated goals"}}},"post":{"summary":"Create goal","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/GoalInput"}}}},"responses":{"201":{"description":"Created"},"422":{"description":"Invalid hierarchy"}}}},
+    "/api/v1/goals/tree":{"get":{"summary":"Get nested goal tree","responses":{"200":{"description":"Tree"}}},"post":{"summary":"Atomically create hierarchy","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"goals":{"type":"array","items":{"$ref":"#/components/schemas/GoalInput"}}}}}}},"responses":{"201":{"description":"Entire hierarchy created"},"422":{"description":"Entire transaction rolled back"}}}},
+    "/api/v1/goals/{id}":{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"get":{"summary":"Get goal","responses":{"200":{"description":"Goal"},"404":{"description":"Not found"}}},"patch":{"summary":"Update, move, archive or restore goal","responses":{"200":{"description":"Goal"}}},"delete":{"summary":"Soft-delete goal","responses":{"200":{"description":"Deleted goal"}}}},
+    "/api/v1/tasks":{"get":{"summary":"List/filter tasks","responses":{"200":{"description":"Paginated tasks"}}},"post":{"summary":"Create task or subtask","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/TaskInput"}}}},"responses":{"201":{"description":"Created"}}}},
+    "/api/v1/tasks/{id}":{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"get":{"summary":"Get task","responses":{"200":{"description":"Task"}}},"patch":{"summary":"Update/restore task","responses":{"200":{"description":"Task"},"422":{"description":"Circular parent"}}},"delete":{"summary":"Soft-delete task","responses":{"200":{"description":"Task"}}}},
+    "/api/v1/tasks/{id}/complete":{"post":{"summary":"Idempotently complete/reopen task","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"Task"}}}},
+    "/api/v1/tasks/{id}/move":{"post":{"summary":"Move task under a valid parent","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"Task"},"422":{"description":"Circular parent"}}}},
+    "/api/v1/habits":{"get":{"summary":"List habits","responses":{"200":{"description":"Habits"}}},"post":{"summary":"Create scheduled habit","responses":{"201":{"description":"Habit"}}}},
+    "/api/v1/habits/{id}":{"patch":{"summary":"Update habit","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"Habit"}}}},
+    "/api/v1/habits/{id}/entries":{"post":{"summary":"Set a dated habit completion","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"Entry"}}}},
+    "/api/v1/recap-templates":{"get":{"summary":"List recap templates","responses":{"200":{"description":"Templates"}}},"post":{"summary":"Create template","responses":{"201":{"description":"Template"}}}},
+    "/api/v1/recap-templates/{id}":{"get":{"summary":"Get template and fields","responses":{"200":{"description":"Template"}}},"patch":{"summary":"Edit bilingual template","responses":{"200":{"description":"Template"}}}},
+    "/api/v1/recap-templates/{id}/fields":{"post":{"summary":"Add prompt","responses":{"201":{"description":"Field"}}}},
+    "/api/v1/recap-templates/{id}/fields/{field_id}":{"patch":{"summary":"Edit/reorder prompt","responses":{"200":{"description":"Field"}}},"delete":{"summary":"Disable prompt","responses":{"200":{"description":"Field"}}}},
+    "/api/v1/recap-templates/{id}/restore-default":{"post":{"summary":"Restore Islamic default","responses":{"200":{"description":"Default snapshot"}}}},
+    "/api/v1/recap-templates/{id}/activate":{"post":{"summary":"Activate template","responses":{"200":{"description":"Active ID"}}}},
+    "/api/v1/recaps":{"get":{"summary":"List recaps; requires recaps:read","responses":{"200":{"description":"Recaps"}}},"post":{"summary":"Create recap; requires recaps:write","requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/RecapInput"}}}},"responses":{"201":{"description":"Recap"},"409":{"description":"Date already exists"}}}},
+    "/api/v1/recaps/{id}":{"get":{"summary":"Read private recap","responses":{"200":{"description":"Recap with immutable template snapshot"}}},"patch":{"summary":"Edit answers with base version","responses":{"200":{"description":"Recap"},"409":{"description":"Version conflict"}}}},
+    "/api/v1/recaps/{id}/complete":{"post":{"summary":"Complete recap","responses":{"200":{"description":"Recap"}}}},
+    "/api/v1/recaps/{id}/reopen":{"post":{"summary":"Reopen recap","responses":{"200":{"description":"Recap"}}}},
+    "/api/v1/resources":{"get":{"summary":"List attached resources","responses":{"200":{"description":"Resources"}}},"post":{"summary":"Attach resource","responses":{"201":{"description":"Resource"}}}},
+    "/api/v1/resources/{id}":{"patch":{"summary":"Update resource","responses":{"200":{"description":"Resource"}}}},
+    "/api/v1/stats":{"get":{"summary":"Calculated statistics","responses":{"200":{"description":"Statistics"}}}},
+    "/api/v1/sync":{"post":{"summary":"Idempotent outbox synchronization","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"cursor":{"type":"integer"},"mutations":{"type":"array","items":{"$ref":"#/components/schemas/SyncMutation"}}}}}}},"responses":{"200":{"description":"Applied records, conflicts and cursor changes"}}}}
+  }
+}
